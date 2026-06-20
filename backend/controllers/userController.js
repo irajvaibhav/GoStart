@@ -24,7 +24,7 @@ exports.updateProfile = async (req, res) => {
     res.json(user);
   } catch (err) {
     console.error('Update profile error:', err.message);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error: ' + err.message });
   }
 };
 
@@ -50,7 +50,7 @@ exports.uploadPhotos = async (req, res) => {
     res.json({ photos: user.photos });
   } catch (err) {
     console.error('Upload photos error:', err.message);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error: ' + err.message });
   }
 };
 
@@ -69,7 +69,7 @@ exports.updatePreferences = async (req, res) => {
     res.json(user);
   } catch (err) {
     console.error('Update preferences error:', err.message);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error: ' + err.message });
   }
 };
 
@@ -80,6 +80,6 @@ exports.verify = async (req, res) => {
     res.json({ message: 'Profile verified!', isVerified: user.isVerified });
   } catch (err) {
     console.error('Verify error:', err.message);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error: ' + err.message });
   }
 };
