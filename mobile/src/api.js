@@ -4,15 +4,19 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Testing on a real phone (not a simulator/emulator), so "localhost" and the
-// emulator-only 10.0.2.2 alias won't reach this computer — use its LAN IP.
-// Find yours with `ipconfig` (Windows) / `ifconfig` (Mac/Linux); phone and
-// computer must be on the same Wi-Fi network.
-const BASE_URL = 'http://192.168.1.5:5000/api';
+// backend is deployed on Render (free tier) instead of pointing at a local
+// LAN IP - works from any network now, not just while this laptop is on and
+// running the server. free tier spins down after ~15 min idle, so the
+// FIRST request after a quiet period can take 30-50s to respond while it
+// wakes back up - that's normal, not a bug.
+const BASE_URL = 'https://gostart-8ytm.onrender.com/api';
 
 const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 10000,
+  // 60s, not the usual 10s - Render's free tier can take 30-50s to wake up
+  // from a cold start, a short timeout would fail the very first request
+  // after any idle period
+  timeout: 60000,
 });
 
 // an axios "interceptor" runs before every single request made through this

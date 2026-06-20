@@ -22,6 +22,12 @@
     },
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "af64e077-4835-4b5b-be58-56c3eedabf23"
+      }
+    },
+    "owner": "irajvaibhav"
   }
 }

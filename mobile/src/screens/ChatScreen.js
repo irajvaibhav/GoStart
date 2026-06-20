@@ -16,7 +16,7 @@ import { useAuth } from '../AuthContext';
 
 // socket URL — same host as api.js's BASE_URL, just without the /api path
 // (Socket.IO connects directly to the server root, not a REST route)
-const SOCKET_URL = 'http://192.168.1.5:5000';
+const SOCKET_URL = 'https://gostart-8ytm.onrender.com';
 
 export default function ChatScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
