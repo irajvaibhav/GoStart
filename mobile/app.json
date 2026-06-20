@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Gostart",
+    "slug": "gostart",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0D0D0D"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.gostart.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0D0D0D"
+      },
+      "package": "com.gostart.app"
+    },
+    "plugins": [
+      "expo-font"
+    ]
+  }
+}
