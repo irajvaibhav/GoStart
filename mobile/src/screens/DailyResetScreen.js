@@ -1,5 +1,9 @@
-// DailyResetScreen.js — shown when user runs out of credits
-// friendly empty state with option to buy more
+// DailyResetScreen.js — empty state shown whenever FindMatchScreen has
+// nothing to show. three different reasons land here (see `reason` param),
+// and they're NOT the same problem - out of credits/daily limit can be
+// fixed by buying credits, but "no profiles left" can't, there's just
+// nobody new to show yet, so the copy and the button both need to match
+// the actual reason instead of always pointing at buying credits.
 
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
@@ -7,8 +11,36 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import theme from '../theme';
 
-export default function DailyResetScreen({ navigation }) {
+const REASONS = {
+  credits: {
+    emoji: '💫',
+    title: "You're Out of Credits",
+    subtitle: 'Buy more credits to keep finding matches.',
+    showTimer: false,
+    buttonText: 'Buy Credits',
+    buttonTarget: 'BuyCredits',
+  },
+  dailyLimit: {
+    emoji: '⏳',
+    title: 'Daily Limit Reached',
+    subtitle: "You've used today's free swipes.\nThey reset at midnight, or buy more credits now.",
+    showTimer: true,
+    buttonText: 'Buy Credits',
+    buttonTarget: 'BuyCredits',
+  },
+  noProfiles: {
+    emoji: '🔍',
+    title: "That's Everyone For Now!",
+    subtitle: "You've seen all the profiles that match your filters.\nCheck back later, or widen your filters.",
+    showTimer: false,
+    buttonText: 'Adjust Filters',
+    buttonTarget: 'Filters',
+  },
+};
+
+export default function DailyResetScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
+  const reason = REASONS[route.params?.reason] || REASONS.credits;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -21,26 +53,24 @@ export default function DailyResetScreen({ navigation }) {
       </TouchableOpacity>
 
       <View style={styles.content}>
-        {/* big emoji because why not */}
-        <Text style={styles.emoji}>💫</Text>
+        <Text style={styles.emoji}>{reason.emoji}</Text>
 
-        <Text style={styles.title}>Happily Searching!</Text>
+        <Text style={styles.title}>{reason.title}</Text>
 
-        <Text style={styles.subtitle}>
-          Your free weekly credits will reset soon.{'\n'}
-          Come back tomorrow or get more credits now.
-        </Text>
+        <Text style={styles.subtitle}>{reason.subtitle}</Text>
 
-        {/* countdown placeholder */}
-        <View style={styles.timerBox}>
-          <Text style={styles.timerLabel}>Resets in</Text>
-          <Text style={styles.timerValue}>~24 hours</Text>
-        </View>
+        {/* countdown only makes sense for the daily-limit case - buying
+            credits or adjusting filters don't have a "resets in" clock */}
+        {reason.showTimer && (
+          <View style={styles.timerBox}>
+            <Text style={styles.timerLabel}>Resets in</Text>
+            <Text style={styles.timerValue}>~24 hours</Text>
+          </View>
+        )}
 
-        {/* buy credits CTA */}
         <TouchableOpacity
           style={styles.buyBtn}
-          onPress={() => navigation.navigate('BuyCredits')}
+          onPress={() => navigation.navigate(reason.buttonTarget)}
           activeOpacity={0.8}
         >
           <LinearGradient
@@ -49,7 +79,7 @@ export default function DailyResetScreen({ navigation }) {
             end={{ x: 1, y: 0 }}
             style={styles.buyGradient}
           >
-            <Text style={styles.buyText}>Find More Matches</Text>
+            <Text style={styles.buyText}>{reason.buttonText}</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>

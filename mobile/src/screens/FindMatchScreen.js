@@ -6,18 +6,18 @@
 import React, { useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  Alert, ActivityIndicator, Dimensions,
+  Alert, ActivityIndicator, Dimensions, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   useSharedValue, useAnimatedStyle, withSpring,
-  withSequence, withTiming,
+  withSequence, withTiming, runOnJS,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 import theme from '../theme';
-import { getDiscover, getCredits, likeUser } from '../api';
+import { getDiscover, getCredits, likeUser, passUser } from '../api';
 import { useAuth } from '../AuthContext';
 
 const { width } = Dimensions.get('window');
@@ -27,6 +27,9 @@ export default function FindMatchScreen({ navigation }) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [credits, setCredits] = useState(user?.credits ?? 5);
+  // the one profile currently being shown, waiting on a like/pass decision -
+  // null means "show the swipe button", set means "show like/dislike buttons"
+  const [candidate, setCandidate] = useState(null);
 
   // animate the swipe button
   const buttonScale = useSharedValue(1);
@@ -48,7 +51,9 @@ export default function FindMatchScreen({ navigation }) {
     }
   };
 
-  // main action — find a match
+  // main action — fetch someone to consider. this does NOT like or pass on
+  // its own anymore - it just shows the profile and lets handleLike/handlePass
+  // below make the actual decision when the user taps one of those buttons.
   const handleFindMatch = async () => {
     // pulse animation on button
     buttonScale.value = withSequence(
@@ -57,7 +62,7 @@ export default function FindMatchScreen({ navigation }) {
     );
 
     if (credits <= 0) {
-      navigation.navigate('DailyReset');
+      navigation.navigate('DailyReset', { reason: 'credits' });
       return;
     }
 
@@ -68,30 +73,17 @@ export default function FindMatchScreen({ navigation }) {
       const profiles = res.data.profiles || [];
 
       if (profiles.length === 0) {
-        navigation.navigate('DailyReset');
+        // distinct from running out of credits - buying credits wouldn't
+        // help here, there's just nobody left to show right now
+        navigation.navigate('DailyReset', { reason: 'noProfiles' });
         return;
       }
 
-      // pick the first profile and auto-like them
-      const profile = profiles[0];
-      const likeRes = await likeUser(profile._id);
-
-      // update credits display
-      setCredits(likeRes.data.creditsRemaining ?? credits - 1);
-
-      // pass the real Match document through too (only exists when matched:
-      // true) - StartConversationScreen needs its real _id to open the chat.
-      // we already recorded the like above, so nothing downstream should
-      // call likeUser on this same profile again.
-      navigation.navigate('MatchFound', {
-        profile,
-        isMutualMatch: likeRes.data.matched,
-        match: likeRes.data.match,
-      });
+      setCandidate(profiles[0]);
     } catch (err) {
       if (err.response?.status === 429) {
         // daily swipe limit hit
-        navigation.navigate('DailyReset');
+        navigation.navigate('DailyReset', { reason: 'dailyLimit' });
       } else if (err.response?.status === 403) {
         // out of credits
         navigation.navigate('BuyCredits');
@@ -99,6 +91,46 @@ export default function FindMatchScreen({ navigation }) {
         Alert.alert('Error', err.response?.data?.error || 'Something went wrong');
       }
     } finally {
+      setLoading(false);
+    }
+  };
+
+  // user tapped the heart - actually like the candidate currently on screen
+  const handleLike = async () => {
+    if (!candidate) return;
+    setLoading(true);
+    try {
+      const likeRes = await likeUser(candidate._id);
+      setCredits(likeRes.data.creditsRemaining ?? credits - 1);
+      const likedProfile = candidate;
+      setCandidate(null);
+
+      // pass the real Match document through too (only exists when matched:
+      // true) - StartConversationScreen needs its real _id to open the chat.
+      navigation.navigate('MatchFound', {
+        profile: likedProfile,
+        isMutualMatch: likeRes.data.matched,
+        match: likeRes.data.match,
+      });
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.error || 'Something went wrong');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // user tapped the X - pass on the candidate, free (no credit cost), then
+  // just go back to the swipe button so they can fetch the next one
+  const handlePass = async () => {
+    if (!candidate) return;
+    setLoading(true);
+    try {
+      await passUser(candidate._id);
+    } catch {
+      // not a big deal if this fails to save - worst case they might see
+      // this profile again later, nothing destructive happened
+    } finally {
+      setCandidate(null);
       setLoading(false);
     }
   };
@@ -120,10 +152,14 @@ export default function FindMatchScreen({ navigation }) {
     .onEnd((e) => {
       if (e.translationX > 100) {
         // swiped far enough — snap back to 0 and trigger find, same as
-        // tapping the button. onEnd here already runs on the JS thread
-        // (gesture-handler v2 default), so calling the async handler directly is fine
+        // tapping the button. onEnd callbacks run as UI-thread "worklets" by
+        // default (gesture-handler v2 + reanimated's babel plugin) - calling
+        // handleFindMatch directly here crashed the app, because it does
+        // React state updates / navigation / network calls, none of which
+        // are safe from the UI thread. runOnJS hops back to the JS thread
+        // first, which is what actually fixes it.
         swipeX.value = withSpring(0);
-        handleFindMatch();
+        runOnJS(handleFindMatch)();
       } else {
         // didn't swipe far enough - spring back to start, do nothing
         swipeX.value = withSpring(0);
@@ -162,47 +198,86 @@ export default function FindMatchScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      {/* hero content */}
-      <View style={styles.heroContent}>
-        {/* golden accent line */}
-        <LinearGradient
-          colors={theme.colors.golden}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.accentLine}
-        />
-
-        <Text style={styles.heroTitle}>
-          Ready to find{'\n'}your match?
-        </Text>
-
-        <View style={styles.subtitleRow}>
-          <Text style={styles.checkmark}>✓</Text>
-          <Text style={styles.heroSubtitle}>
-            Verified profiles. Serious intentions.{'\n'}Real relationships.
-          </Text>
+      {/* hero content - swapped out for a candidate preview once one's been fetched */}
+      {candidate ? (
+        <View style={styles.heroContent}>
+          {candidate.photos?.[0] ? (
+            <Image source={{ uri: candidate.photos[0] }} style={styles.candidatePhoto} />
+          ) : (
+            <View style={[styles.candidatePhoto, styles.candidatePhotoFallback]}>
+              <Text style={styles.candidatePhotoText}>
+                {(candidate.name || '?').charAt(0)}
+              </Text>
+            </View>
+          )}
+          <Text style={styles.candidateName}>{candidate.name}, {candidate.age}</Text>
+          {candidate.city ? <Text style={styles.candidateCity}>{candidate.city}</Text> : null}
         </View>
+      ) : (
+        <View style={styles.heroContent}>
+          {/* golden accent line */}
+          <LinearGradient
+            colors={theme.colors.golden}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.accentLine}
+          />
 
-        {/* filters button */}
-        <TouchableOpacity
-          style={styles.filtersBtn}
-          onPress={() => navigation.navigate('Filters')}
-        >
-          <Text style={styles.filterIcon}>⚙</Text>
-          <Text style={styles.filtersText}>Filters</Text>
-        </TouchableOpacity>
-      </View>
+          <Text style={styles.heroTitle}>
+            Ready to find{'\n'}your match?
+          </Text>
 
-      {/* bottom swipe area */}
+          <View style={styles.subtitleRow}>
+            <Text style={styles.checkmark}>✓</Text>
+            <Text style={styles.heroSubtitle}>
+              Verified profiles. Serious intentions.{'\n'}Real relationships.
+            </Text>
+          </View>
+
+          {/* filters button */}
+          <TouchableOpacity
+            style={styles.filtersBtn}
+            onPress={() => navigation.navigate('Filters')}
+          >
+            <Text style={styles.filterIcon}>⚙</Text>
+            <Text style={styles.filtersText}>Filters</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* bottom action area */}
       <View style={styles.bottomArea}>
         {loading ? (
           <View style={styles.loadingWrap}>
             <ActivityIndicator size="large" color={theme.colors.accent} />
-            <Text style={styles.loadingText}>Finding your match...</Text>
+            <Text style={styles.loadingText}>
+              {candidate ? 'Just a sec...' : 'Finding your match...'}
+            </Text>
           </View>
+        ) : candidate ? (
+          <>
+            {/* like / dislike — the actual decision, nothing happens automatically */}
+            <View style={styles.decisionRow}>
+              <TouchableOpacity
+                style={styles.passBtn}
+                onPress={handlePass}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.passIcon}>✕</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.likeBtn}
+                onPress={handleLike}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.likeIcon}>♥</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.creditNote}>Like uses 1 🪙 credit · Pass is free</Text>
+          </>
         ) : (
           <>
-            {/* swipe button — tap or swipe right */}
+            {/* swipe button — tap or swipe right to fetch someone to consider */}
             <GestureDetector gesture={swipeGesture}>
               <Animated.View style={[styles.swipeButton, buttonStyle]}>
                 <TouchableOpacity
@@ -375,5 +450,68 @@ const styles = StyleSheet.create({
     fontFamily: theme.fonts.bodyMedium,
     fontSize: 16,
     color: theme.colors.textSecondary,
+  },
+  candidatePhoto: {
+    width: width - 80,
+    height: width - 80,
+    borderRadius: theme.radius.lg,
+    alignSelf: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  candidatePhotoFallback: {
+    backgroundColor: theme.colors.card,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  candidatePhotoText: {
+    fontSize: 64,
+    fontFamily: theme.fonts.heading,
+    color: theme.colors.textMuted,
+  },
+  candidateName: {
+    fontFamily: theme.fonts.heading,
+    fontSize: 26,
+    color: theme.colors.textPrimary,
+    textAlign: 'center',
+    marginTop: theme.spacing.md,
+  },
+  candidateCity: {
+    fontFamily: theme.fonts.body,
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  decisionRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: theme.spacing.xl,
+  },
+  passBtn: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: theme.colors.card,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  passIcon: {
+    fontSize: 24,
+    color: theme.colors.textSecondary,
+  },
+  likeBtn: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: theme.colors.crimson,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  likeIcon: {
+    fontSize: 24,
+    color: '#fff',
   },
 });
