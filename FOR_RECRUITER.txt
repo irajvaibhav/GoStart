@@ -1,0 +1,101 @@
+GOSTART - DATING APP (ASSIGNMENT SUBMISSION)
+=============================================
+
+WHAT THIS IS
+------------
+A full-stack dating app: React Native (Expo) mobile app + Node.js/Express
+backend + MongoDB database. Runs on both iOS and Android (same codebase).
+
+HOW TO TRY IT (no setup needed)
+--------------------------------
+1. Install the Android app:
+   https://expo.dev/accounts/irajvaibhav/projects/gostart/builds/2a3ba555-d68e-4290-9398-b04f46bc2973
+
+2. Login with the demo account:
+   Email:    priya@gostart.com
+   Password: password123
+
+   (There's a second demo account, Arjun, who has already liked Priya from
+   the seed data on purpose - so when you log in as Priya and tap "Find
+   Match", you'll see a REAL, LIVE mutual match happen, not a pre-faked one.)
+
+3. The backend is already live and deployed (Render), so the app works
+   straight away - you don't need to run anything locally.
+   Backend URL: https://gostart-8ytm.onrender.com
+   (Free hosting tier - if it's been idle a while, the first request can
+   take 30-50 seconds to wake up. That's normal, not a bug.)
+
+SOURCE CODE
+-----------
+GitHub: https://github.com/irajvaibhav/GoStart
+Full setup/run instructions, tech stack reasoning, and a breakdown of every
+backend feature are in README.md in the repo.
+
+ALL FEATURES (POINT WISE)
+--------------------------
+
+LOGIN & ACCOUNT
+1. Sign up / Login with email and password
+2. Passwords are never stored as plain text - they're encrypted (hashed)
+   before saving, even the developer can't see your real password
+3. Stay logged in - close the app and reopen, you're still logged in
+4. Server checks every single field you type during signup (valid email,
+   real age, password length, etc.) and gives a clear error if something's
+   wrong - not just a generic "failed" message
+
+FINDING MATCHES
+5. Find Match screen - tap or swipe to see a new profile
+6. Like or Pass on each profile, your choice, nothing happens automatically
+7. Smart discovery - the app looks at your interests and shows you people
+   who share the most interests with you FIRST, not just random people
+8. Real matching logic - when you like someone, the app checks if they
+   already liked you back. If yes, it's an instant live match - not staged,
+   not pre-decided, it actually happens in the moment
+9. Daily free swipe limit + a credits system (like Bumble/Hinge), with a
+   "buy more credits" screen
+10. Filters - set your age range, who you're looking for, and location
+    preference for who shows up
+
+CHATTING
+11. Once matched, you can start a real-time conversation
+12. Messages appear instantly on the other person's screen - no refresh,
+    no waiting, powered by live socket connections (same tech behind
+    WhatsApp Web / Slack's instant messages)
+13. Chat list shows all your matches with their last message preview
+
+YOUR PROFILE
+14. Edit Profile screen - update your name, age, city, profession, bio,
+    and interests anytime
+15. Change your profile photo - pick one from your gallery and it uploads
+    straight to the server
+16. See your credits balance and a "Get Verified" badge on your profile
+17. Mock identity verification flow (tap to verify, instantly badge shows)
+
+DESIGN
+18. Built to match the provided Figma design exactly - dark theme, gold
+    accent colors, custom fonts, smooth swipe animations
+19. Custom-made app icon and splash screen (not the default Expo logo)
+20. Works on both iPhone and Android from the exact same code
+
+WHAT'S REAL VS WHAT'S MOCKED (being upfront)
+- Everything above is running against a real, live database - not fake
+  placeholder data
+- Only ONE thing is mocked: paying for credits doesn't charge real money
+  (no payment gateway connected, since that needs real business
+  registration/bank details)
+
+TECH STACK
+----------
+Mobile:    React Native + Expo (one codebase, iOS + Android)
+Backend:   Node.js + Express
+Database:  MongoDB (Atlas, cloud-hosted)
+Real-time: Socket.IO
+Auth:      JWT + bcrypt
+Hosting:   Render (backend), EAS Build (Android APK)
+
+NOTE ON PLATFORMS
+------------------
+Built and tested with React Native + Expo, which compiles to native code for
+both iOS and Android from the same source - so this runs on both, even
+though the attached installable file is the Android APK (iOS install links
+require an Apple developer account to distribute outside the App Store).

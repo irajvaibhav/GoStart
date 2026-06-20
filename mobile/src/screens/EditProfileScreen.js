@@ -47,11 +47,14 @@ export default function EditProfileScreen({ navigation }) {
         return;
       }
 
+      // allowsEditing/aspect would normally pop up a native crop screen, but
+      // that crop UI rendered broken on at least one real device (no visible
+      // confirm button) - skip it. the avatar is shown in a circular,
+      // clipped view anyway (see styles.photo), so an uncropped photo still
+      // looks fine.
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: 0.7, // compress a bit, no need for full camera resolution here
-        allowsEditing: true,
-        aspect: [1, 1],
       });
 
       if (result.canceled || !result.assets?.length) return;

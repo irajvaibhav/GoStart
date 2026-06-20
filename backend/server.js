@@ -3,11 +3,20 @@
 
 const express = require('express');
 const http = require('http');
+const fs = require('fs');
 const { Server } = require('socket.io');
 const cors = require('cors');
 require('dotenv').config();
 
 const connectDB = require('./config/db');
+
+// uploads/ is gitignored on purpose (we don't want user photos in git), but
+// that means it doesn't exist at all on a fresh deploy - multer tries to
+// write into it and crashes with a 500 if the folder isn't there. create it
+// once on startup if missing.
+if (!fs.existsSync('uploads')) {
+  fs.mkdirSync('uploads');
+}
 
 const app = express();
 // socket.io needs the raw node http server (not the express app) to attach
