@@ -25,6 +25,7 @@ import ChatListScreen from '../screens/ChatListScreen';
 import ChatScreen from '../screens/ChatScreen';
 import CommunityScreen from '../screens/CommunityScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
 import VerificationScreen from '../screens/VerificationScreen';
 
 const Stack = createNativeStackNavigator();
@@ -54,15 +55,6 @@ function TabIcon({ label, focused }) {
         { color: focused ? theme.colors.crimson : theme.colors.textMuted },
       ]}>
         {icons[label]}
-      </Text>
-      <Text style={[
-        styles.tabLabel,
-        {
-          color: focused ? theme.colors.crimson : theme.colors.textMuted,
-          fontFamily: focused ? theme.fonts.bodyMedium : theme.fonts.body,
-        },
-      ]}>
-        {label}
       </Text>
     </View>
   );
@@ -99,6 +91,7 @@ function ProfileStack() {
   return (
     <Stack.Navigator screenOptions={stackScreenOptions}>
       <Stack.Screen name="ProfileHome" component={ProfileScreen} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
       <Stack.Screen name="Verification" component={VerificationScreen} />
     </Stack.Navigator>
   );
@@ -197,13 +190,8 @@ const styles = StyleSheet.create({
   tabIconWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
   },
   tabIcon: {
-    fontSize: 22,
-  },
-  tabLabel: {
-    fontSize: 10,
-    marginTop: 2,
+    fontSize: 24,
   },
 });

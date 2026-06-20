@@ -17,7 +17,7 @@ import Animated, {
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 import theme from '../theme';
-import { getDiscover, getCredits, likeUser, passUser } from '../api';
+import { getDiscover, getCredits, likeUser, passUser, resolvePhotoUrl } from '../api';
 import { useAuth } from '../AuthContext';
 
 const { width } = Dimensions.get('window');
@@ -202,7 +202,7 @@ export default function FindMatchScreen({ navigation }) {
       {candidate ? (
         <View style={styles.heroContent}>
           {candidate.photos?.[0] ? (
-            <Image source={{ uri: candidate.photos[0] }} style={styles.candidatePhoto} />
+            <Image source={{ uri: resolvePhotoUrl(candidate.photos[0]) }} style={styles.candidatePhoto} />
           ) : (
             <View style={[styles.candidatePhoto, styles.candidatePhotoFallback]}>
               <Text style={styles.candidatePhotoText}>

@@ -9,7 +9,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import theme from '../theme';
-import { getConversations } from '../api';
+import { getConversations, resolvePhotoUrl } from '../api';
 
 export default function ChatListScreen({ navigation }) {
   const insets = useSafeAreaInsets();
@@ -50,7 +50,7 @@ export default function ChatListScreen({ navigation }) {
     // user, lastMessage } - "user" not "otherUser", and there's no plain
     // _id field, so item.matchId is the only real identifier here
     const otherUser = item.otherUser || item.user || {};
-    const otherPhoto = otherUser.photos?.[0];
+    const otherPhoto = resolvePhotoUrl(otherUser.photos?.[0]);
     // lastMessage comes back as an OBJECT ({ text, sender, createdAt }) or
     // null, never a plain string - rendering item.lastMessage directly would
     // crash <Text> ("Objects are not valid as a React child")

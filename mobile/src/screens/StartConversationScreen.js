@@ -8,12 +8,13 @@ import {
   Alert, Image,
 } from 'react-native';
 import theme from '../theme';
+import { resolvePhotoUrl } from '../api';
 
 export default function StartConversationScreen({ route, navigation }) {
   const profile = route.params?.profile || {};
   // profile has a `photos` ARRAY (matches the User schema), there's no
   // singular `photo` field - grab the first one for the avatar here
-  const profilePhoto = profile.photos?.[0];
+  const profilePhoto = resolvePhotoUrl(profile.photos?.[0]);
   // the real Match document (has the _id chat.js actually needs) - passed
   // through from FindMatchScreen -> MatchFoundScreen -> here. profile._id is
   // the OTHER PERSON's id, not a match id, so it can't be used for chat routes.

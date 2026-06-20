@@ -11,7 +11,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import theme from '../theme';
 import { useAuth } from '../AuthContext';
-import { getCredits } from '../api';
+import { getCredits, resolvePhotoUrl } from '../api';
 
 export default function ProfileScreen({ navigation }) {
   const insets = useSafeAreaInsets();
@@ -53,8 +53,10 @@ export default function ProfileScreen({ navigation }) {
   const bio = user?.bio || 'No bio yet. Tell people about yourself!';
   const interests = user?.interests || [];
   const isVerified = user?.isVerified || false;
-  // User schema stores a `photos` array, not a singular `photo` field
-  const photo = user?.photos?.[0] || null;
+  // User schema stores a `photos` array, not a singular `photo` field.
+  // resolvePhotoUrl turns the backend's relative "/uploads/xxx.jpg" path
+  // into a full URL the <Image> component can actually load
+  const photo = resolvePhotoUrl(user?.photos?.[0]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -152,10 +154,11 @@ export default function ProfileScreen({ navigation }) {
         </View>
 
         {/* action buttons */}
-        {/* no onPress yet - there's no EditProfile screen built. backend
-            already supports it (PUT /api/users/profile in api.js), this
-            button just isn't wired to a screen */}
-        <TouchableOpacity style={styles.editBtn} activeOpacity={0.8}>
+        <TouchableOpacity
+          style={styles.editBtn}
+          onPress={() => navigation.navigate('EditProfile')}
+          activeOpacity={0.8}
+        >
           <Text style={styles.editBtnText}>Edit Profile</Text>
         </TouchableOpacity>
 

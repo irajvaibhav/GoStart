@@ -9,7 +9,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // running the server. free tier spins down after ~15 min idle, so the
 // FIRST request after a quiet period can take 30-50s to respond while it
 // wakes back up - that's normal, not a bug.
-const BASE_URL = 'https://gostart-8ytm.onrender.com/api';
+const SERVER_URL = 'https://gostart-8ytm.onrender.com';
+const BASE_URL = `${SERVER_URL}/api`;
+
+// uploaded photos are saved on the backend as a relative path like
+// "/uploads/12345.jpg" (see backend/routes/users.js), not a full URL - the
+// server has no idea what its own public address is. so before showing one
+// of these in an <Image>, stick the server's address on the front. seed/demo
+// photos are already full https:// URLs (picsum.photos), so leave those alone.
+export const resolvePhotoUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  return `${SERVER_URL}${path}`;
+};
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -50,6 +62,23 @@ export const updatePreferences = (data) =>
 
 export const verify = () =>
   api.post('/users/verify');
+
+// uploads one photo. backend expects multipart/form-data under the field
+// name "photos" (see upload.array('photos', 6) in routes/users.js), so we
+// build a FormData with one file in it rather than sending JSON.
+export const uploadPhoto = (photoUri) => {
+  const formData = new FormData();
+  // React Native's fetch/FormData accepts this {uri, name, type} shape
+  // directly - it knows to read the file from `uri` and stream it
+  formData.append('photos', {
+    uri: photoUri,
+    name: 'photo.jpg',
+    type: 'image/jpeg',
+  });
+  return api.post('/users/photos', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
 
 // ─── DISCOVER / MATCHING (backend: routes/match.js → /api/match) ──
 export const getDiscover = () =>

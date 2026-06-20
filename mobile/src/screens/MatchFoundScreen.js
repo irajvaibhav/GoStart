@@ -11,6 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import theme from '../theme';
+import { resolvePhotoUrl } from '../api';
 
 const { width } = Dimensions.get('window');
 
@@ -41,7 +42,7 @@ export default function MatchFoundScreen({ route, navigation }) {
   } = profile;
 
   // grab first photo from the array
-  const photo = photos.length > 0 ? photos[0] : null;
+  const photo = resolvePhotoUrl(photos.length > 0 ? photos[0] : null);
 
   // location line like "Gurgaon · 5'4 · Hindu"
   const infoLine = [city, height, religion].filter(Boolean).join(' · ');
