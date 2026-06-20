@@ -4,6 +4,7 @@
 const express = require('express');
 const http = require('http');
 const fs = require('fs');
+const path = require('path');
 const { Server } = require('socket.io');
 const cors = require('cors');
 require('dotenv').config();
@@ -14,8 +15,9 @@ const connectDB = require('./config/db');
 // that means it doesn't exist at all on a fresh deploy - multer tries to
 // write into it and crashes with a 500 if the folder isn't there. create it
 // once on startup if missing.
-if (!fs.existsSync('uploads')) {
-  fs.mkdirSync('uploads');
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
 const app = express();
@@ -35,7 +37,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // serve uploaded files
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(uploadsDir));
 
 // routes
 app.use('/api/auth', require('./routes/auth'));
@@ -83,6 +85,14 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('socket disconnected:', socket.id);
+  });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal Server Error'
   });
 });
 

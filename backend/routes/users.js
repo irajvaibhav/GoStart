@@ -12,7 +12,7 @@ const auth = require('../middleware/auth');
 // multer setup for photo uploads
 // saves to /uploads with a unique filename
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
+  destination: (req, file, cb) => cb(null, path.join(__dirname, '../uploads')),
   filename: (req, file, cb) => {
     const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
     cb(null, unique + path.extname(file.originalname));
@@ -22,11 +22,13 @@ const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
   fileFilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png|webp/;
-    const ext = allowed.test(path.extname(file.originalname).toLowerCase());
-    const mime = allowed.test(file.mimetype);
-    if (ext && mime) return cb(null, true);
-    cb(new Error('Only images allowed'));
+    if (!file || !file.originalname) {
+      return cb(new Error('No file name provided'));
+    }
+    const allowed = /\.(jpeg|jpg|png|webp)$/i;
+    const isPhoto = allowed.test(file.originalname) || (file.mimetype && file.mimetype.startsWith('image/'));
+    if (isPhoto) return cb(null, true);
+    cb(new Error('Only images allowed (jpeg, jpg, png, webp)'));
   }
 });
 
@@ -66,6 +68,10 @@ router.put('/profile', auth, async (req, res) => {
 router.post('/photos', auth, upload.array('photos', 6), async (req, res) => {
   try {
     const user = await User.findById(req.user);
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No files uploaded. Make sure the field name is "photos"' });
+    }
 
     // build URLs from uploaded files
     const newPhotos = req.files.map(f => `/uploads/${f.filename}`);

@@ -75,9 +75,7 @@ export const uploadPhoto = (photoUri) => {
     name: 'photo.jpg',
     type: 'image/jpeg',
   });
-  return api.post('/users/photos', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  return api.post('/users/photos', formData);
 };
 
 // ─── DISCOVER / MATCHING (backend: routes/match.js → /api/match) ──
