@@ -36,30 +36,35 @@ export default function EditProfileScreen({ navigation }) {
   const [saving, setSaving] = useState(false);
 
   const handlePickPhoto = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Permission needed', 'Allow photo access to set a profile picture.');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.7, // compress a bit, no need for full camera resolution here
-      allowsEditing: true,
-      aspect: [1, 1],
-    });
-
-    if (result.canceled) return;
-
-    const localUri = result.assets[0].uri;
-    setUploadingPhoto(true);
+    // everything (permission check, opening the picker, the upload itself)
+    // is inside one try/catch now - previously only the upload was wrapped,
+    // so an error from the permission request or the picker itself would
+    // silently fail with no Alert and no spinner, looking like nothing happened
     try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permission needed', 'Allow photo access to set a profile picture.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.7, // compress a bit, no need for full camera resolution here
+        allowsEditing: true,
+        aspect: [1, 1],
+      });
+
+      if (result.canceled || !result.assets?.length) return;
+
+      const localUri = result.assets[0].uri;
+      setUploadingPhoto(true);
+
       const res = await uploadPhoto(localUri);
       const newPhotos = res.data.photos || [];
       setPhoto(resolvePhotoUrl(newPhotos[newPhotos.length - 1]));
       await refreshUser(); // so the rest of the app (ProfileScreen etc) sees it too
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.error || 'Could not upload photo');
+      Alert.alert('Error', err.response?.data?.error || err.message || 'Could not upload photo');
     } finally {
       setUploadingPhoto(false);
     }
