@@ -16,9 +16,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
-import theme from '../theme';
-import { getDiscover, getCredits, likeUser, passUser, resolvePhotoUrl } from '../api';
-import { useAuth } from '../AuthContext';
+import theme from '../../theme';
+import { getDiscover, getCredits, likeUser, passUser, resolvePhotoUrl } from '../../api';
+import { useAuth } from '../../AuthContext';
 
 const { width } = Dimensions.get('window');
 

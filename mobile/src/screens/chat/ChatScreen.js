@@ -10,9 +10,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { io } from 'socket.io-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import theme from '../theme';
-import { getMessages, sendMessage as apiSendMessage } from '../api';
-import { useAuth } from '../AuthContext';
+import theme from '../../theme';
+import { getMessages, sendMessage as apiSendMessage } from '../../api';
+import { useAuth } from '../../AuthContext';
 
 // socket URL — same host as api.js's BASE_URL, just without the /api path
 // (Socket.IO connects directly to the server root, not a REST route)

@@ -8,9 +8,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, BounceIn } from 'react-native-reanimated';
-import theme from '../theme';
-import { verify } from '../api';
-import { useAuth } from '../AuthContext';
+import theme from '../../theme';
+import { verify } from '../../api';
+import { useAuth } from '../../AuthContext';
 
 export default function VerificationScreen({ navigation }) {
   const insets = useSafeAreaInsets();

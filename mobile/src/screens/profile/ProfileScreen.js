@@ -9,9 +9,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import theme from '../theme';
-import { useAuth } from '../AuthContext';
-import { getCredits, resolvePhotoUrl } from '../api';
+import theme from '../../theme';
+import { useAuth } from '../../AuthContext';
+import { getCredits, resolvePhotoUrl } from '../../api';
 
 export default function ProfileScreen({ navigation }) {
   const insets = useSafeAreaInsets();

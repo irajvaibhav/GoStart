@@ -12,9 +12,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
-import theme from '../theme';
-import { useAuth } from '../AuthContext';
-import { updateProfile, uploadPhoto, resolvePhotoUrl } from '../api';
+import theme from '../../theme';
+import { useAuth } from '../../AuthContext';
+import { updateProfile, uploadPhoto, resolvePhotoUrl } from '../../api';
 
 export default function EditProfileScreen({ navigation }) {
   const insets = useSafeAreaInsets();

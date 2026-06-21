@@ -10,8 +10,8 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-import theme from '../theme';
-import { resolvePhotoUrl } from '../api';
+import theme from '../../theme';
+import { resolvePhotoUrl } from '../../api';
 
 const { width } = Dimensions.get('window');
 

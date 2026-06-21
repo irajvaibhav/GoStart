@@ -8,8 +8,8 @@ import {
   ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAuth } from '../AuthContext';
-import theme from '../theme';
+import { useAuth } from '../../AuthContext';
+import theme from '../../theme';
 
 const GENDERS = ['Male', 'Female', 'Other'];
 

@@ -8,8 +8,8 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import theme from '../theme';
-import { getCredits, purchaseCredits } from '../api';
+import theme from '../../theme';
+import { getCredits, purchaseCredits } from '../../api';
 
 // hardcoded packs — ideally these come from getPackages() API.
 // ids MUST match backend/routes/credits.js's PACKAGES array (1, 2, 3) -

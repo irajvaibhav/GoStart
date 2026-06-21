@@ -7,8 +7,8 @@ import {
   View, Text, TouchableOpacity, StyleSheet,
   Alert, Image,
 } from 'react-native';
-import theme from '../theme';
-import { resolvePhotoUrl } from '../api';
+import theme from '../../theme';
+import { resolvePhotoUrl } from '../../api';
 
 export default function StartConversationScreen({ route, navigation }) {
   const profile = route.params?.profile || {};

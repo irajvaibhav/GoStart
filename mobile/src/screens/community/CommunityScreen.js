@@ -5,7 +5,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import theme from '../theme';
+import theme from '../../theme';
 
 // some sample interests to make the page less empty
 const INTERESTS = [

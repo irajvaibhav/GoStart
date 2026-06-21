@@ -8,8 +8,8 @@ import {
   StyleSheet, ScrollView, Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import theme from '../theme';
-import { updatePreferences } from '../api';
+import theme from '../../theme';
+import { updatePreferences } from '../../api';
 
 const RELIGIONS = ['Any', 'Hindu', 'Muslim', 'Christian', 'Sikh', 'Jain', 'Buddhist', 'Other'];
 

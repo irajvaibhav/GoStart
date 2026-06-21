@@ -13,20 +13,20 @@ import { useAuth } from '../AuthContext';
 import theme from '../theme';
 
 // ─── screens ─────────────────────────────────────
-import LoginScreen from '../screens/LoginScreen';
-import SignupScreen from '../screens/SignupScreen';
-import FindMatchScreen from '../screens/FindMatchScreen';
-import MatchFoundScreen from '../screens/MatchFoundScreen';
-import StartConversationScreen from '../screens/StartConversationScreen';
-import DailyResetScreen from '../screens/DailyResetScreen';
-import FiltersScreen from '../screens/FiltersScreen';
-import BuyCreditsScreen from '../screens/BuyCreditsScreen';
-import ChatListScreen from '../screens/ChatListScreen';
-import ChatScreen from '../screens/ChatScreen';
-import CommunityScreen from '../screens/CommunityScreen';
-import ProfileScreen from '../screens/ProfileScreen';
-import EditProfileScreen from '../screens/EditProfileScreen';
-import VerificationScreen from '../screens/VerificationScreen';
+import LoginScreen from '../screens/auth/LoginScreen';
+import SignupScreen from '../screens/auth/SignupScreen';
+import FindMatchScreen from '../screens/match/FindMatchScreen';
+import MatchFoundScreen from '../screens/match/MatchFoundScreen';
+import StartConversationScreen from '../screens/match/StartConversationScreen';
+import DailyResetScreen from '../screens/match/DailyResetScreen';
+import FiltersScreen from '../screens/match/FiltersScreen';
+import BuyCreditsScreen from '../screens/credits/BuyCreditsScreen';
+import ChatListScreen from '../screens/chat/ChatListScreen';
+import ChatScreen from '../screens/chat/ChatScreen';
+import CommunityScreen from '../screens/community/CommunityScreen';
+import ProfileScreen from '../screens/profile/ProfileScreen';
+import EditProfileScreen from '../screens/profile/EditProfileScreen';
+import VerificationScreen from '../screens/profile/VerificationScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();

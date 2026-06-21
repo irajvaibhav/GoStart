@@ -8,8 +8,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import theme from '../theme';
-import { getConversations, resolvePhotoUrl } from '../api';
+import theme from '../../theme';
+import { getConversations, resolvePhotoUrl } from '../../api';
 
 export default function ChatListScreen({ navigation }) {
   const insets = useSafeAreaInsets();
