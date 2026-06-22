@@ -26,18 +26,21 @@ export default function ChatListScreen({ navigation }) {
   );
 
   const fetchData = async () => {
+    setLoading(true);
     try {
-      const [convRes, likerRes] = await Promise.all([
-        getConversations(),
-        getLikers()
-      ]);
-      setConversations(convRes.data.conversations || convRes.data || []);
-      setLikers(likerRes.data || []);
-    } catch {
-      // silent fail, show empty lists
-    } finally {
-      setLoading(false);
+      const res = await getConversations();
+      setConversations(res.data.conversations || res.data || []);
+    } catch (err) {
+      console.warn('Failed to fetch conversations:', err.message);
     }
+
+    try {
+      const res = await getLikers();
+      setLikers(res.data || []);
+    } catch (err) {
+      console.warn('Failed to fetch likers (endpoint might still be deploying on Render):', err.message);
+    }
+    setLoading(false);
   };
 
   const formatTime = (dateStr) => {
