@@ -10,37 +10,51 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import theme from '../../theme';
 import { updatePreferences } from '../../api';
+import { useAuth } from '../../AuthContext';
 
 const RELIGIONS = ['Any', 'Hindu', 'Muslim', 'Christian', 'Sikh', 'Jain', 'Buddhist', 'Other'];
 
 export default function FiltersScreen({ navigation }) {
   const insets = useSafeAreaInsets();
+  const { user, refreshUser } = useAuth();
 
-  // filter state — defaults
-  const [lookingFor, setLookingFor] = useState('Women'); // Men or Women
-  const [ageMin, setAgeMin] = useState('21');
-  const [ageMax, setAgeMax] = useState('30');
-  const [location, setLocation] = useState('Nearby'); // Nearby or Same City
-  const [religion, setReligion] = useState('Any');
-  const [profession, setProfession] = useState('');
+  const prefs = user?.preferences || {};
+
+  // helper to get initial gender preference
+  const getInitialLookingFor = () => {
+    const val = prefs.lookingFor || '';
+    if (val.toLowerCase() === 'male' || val.toLowerCase() === 'men') return 'Men';
+    return 'Women'; // default/fallback
+  };
+
+  // helper to get initial location preference
+  const getInitialLocation = () => {
+    const val = prefs.location || '';
+    if (val.toLowerCase() === 'same city' || val.toLowerCase() === 'same_city') return 'Same City';
+    return 'Nearby'; // default/fallback
+  };
+
+  // filter state — loaded from user preferences
+  const [lookingFor, setLookingFor] = useState(getInitialLookingFor());
+  const [ageMin, setAgeMin] = useState(prefs.ageMin ? String(prefs.ageMin) : '18');
+  const [ageMax, setAgeMax] = useState(prefs.ageMax ? String(prefs.ageMax) : '35');
+  const [location, setLocation] = useState(getInitialLocation());
+  const [religion, setReligion] = useState(user?.religion || 'Any');
+  const [profession, setProfession] = useState(user?.profession || '');
   const [saving, setSaving] = useState(false);
 
   const handleApply = async () => {
     setSaving(true);
     try {
-      // heads up: religion/profession are sent here but PUT /api/users/preferences
-      // only reads lookingFor/ageMin/ageMax/location - these two fields get
-      // silently dropped server-side, and discover's filter doesn't use them
-      // either. not wired up to anything yet, kept here so the form fields
-      // have somewhere to "go" without throwing.
       await updatePreferences({
-        lookingFor: lookingFor.toLowerCase(),
+        lookingFor: lookingFor === 'Men' ? 'men' : 'women',
         ageMin: parseInt(ageMin) || 18,
         ageMax: parseInt(ageMax) || 50,
         location: location.toLowerCase(),
         religion: religion === 'Any' ? '' : religion,
         profession: profession.trim(),
       });
+      await refreshUser(); // updates global AuthContext state!
       navigation.goBack();
     } catch (err) {
       Alert.alert('Error', 'Failed to save filters');

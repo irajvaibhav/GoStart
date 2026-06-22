@@ -27,8 +27,9 @@ export default function FindMatchScreen({ navigation }) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [credits, setCredits] = useState(user?.credits ?? 5);
-  // the one profile currently being shown, waiting on a like/pass decision -
-  // null means "show the swipe button", set means "show like/dislike buttons"
+  // queue of profiles returned from discover API
+  const [profilesList, setProfilesList] = useState([]);
+  // the one profile currently being shown
   const [candidate, setCandidate] = useState(null);
 
   // animate the swipe button
@@ -37,10 +38,13 @@ export default function FindMatchScreen({ navigation }) {
     transform: [{ scale: buttonScale.value }],
   }));
 
-  // fetch credits on focus (simple approach)
+  // fetch credits whenever screen comes into focus
   React.useEffect(() => {
-    fetchCredits();
-  }, []);
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchCredits();
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   const fetchCredits = async () => {
     try {
@@ -79,6 +83,7 @@ export default function FindMatchScreen({ navigation }) {
         return;
       }
 
+      setProfilesList(profiles);
       setCandidate(profiles[0]);
     } catch (err) {
       if (err.response?.status === 429) {
@@ -103,7 +108,11 @@ export default function FindMatchScreen({ navigation }) {
       const likeRes = await likeUser(candidate._id);
       setCredits(likeRes.data.creditsRemaining ?? credits - 1);
       const likedProfile = candidate;
-      setCandidate(null);
+
+      // shift to next candidate locally
+      const nextProfiles = profilesList.slice(1);
+      setProfilesList(nextProfiles);
+      setCandidate(nextProfiles[0] || null);
 
       // pass the real Match document through too (only exists when matched:
       // true) - StartConversationScreen needs its real _id to open the chat.
@@ -120,7 +129,7 @@ export default function FindMatchScreen({ navigation }) {
   };
 
   // user tapped the X - pass on the candidate, free (no credit cost), then
-  // just go back to the swipe button so they can fetch the next one
+  // display the next candidate in the queue
   const handlePass = async () => {
     if (!candidate) return;
     setLoading(true);
@@ -130,7 +139,9 @@ export default function FindMatchScreen({ navigation }) {
       // not a big deal if this fails to save - worst case they might see
       // this profile again later, nothing destructive happened
     } finally {
-      setCandidate(null);
+      const nextProfiles = profilesList.slice(1);
+      setProfilesList(nextProfiles);
+      setCandidate(nextProfiles[0] || null);
       setLoading(false);
     }
   };
