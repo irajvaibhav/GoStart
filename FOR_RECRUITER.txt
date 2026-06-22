@@ -9,7 +9,7 @@ backend + MongoDB database. Runs on both iOS and Android (same codebase).
 HOW TO TRY IT (no setup needed)
 --------------------------------
 1. Install the Android app:
-   https://expo.dev/accounts/irajvaibhav/projects/gostart/builds/2a3ba555-d68e-4290-9398-b04f46bc2973
+   https://expo.dev/accounts/irajvaibhav/projects/gostart/builds/8fcf818c-2044-4437-bd3e-1f0fbcaf28b2
 
 2. Login with the demo account:
    Email:    priya@gostart.com

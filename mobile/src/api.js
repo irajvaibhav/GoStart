@@ -82,6 +82,9 @@ export const uploadPhoto = (photoUri) => {
 export const getDiscover = () =>
   api.get('/match/discover');
 
+export const getLikers = () =>
+  api.get('/match/likers');
+
 export const likeUser = (targetUserId) =>
   api.post('/match/like', { targetUserId });
 

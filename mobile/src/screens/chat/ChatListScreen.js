@@ -4,31 +4,37 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity,
-  StyleSheet, Image, ActivityIndicator,
+  StyleSheet, Image, ActivityIndicator, ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 import theme from '../../theme';
-import { getConversations, resolvePhotoUrl } from '../../api';
+import { getConversations, getLikers, resolvePhotoUrl } from '../../api';
 
 export default function ChatListScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const [conversations, setConversations] = useState([]);
+  const [likers, setLikers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // refetch when tab comes into focus
   useFocusEffect(
     useCallback(() => {
-      fetchConversations();
+      fetchData();
     }, [])
   );
 
-  const fetchConversations = async () => {
+  const fetchData = async () => {
     try {
-      const res = await getConversations();
-      setConversations(res.data.conversations || res.data || []);
+      const [convRes, likerRes] = await Promise.all([
+        getConversations(),
+        getLikers()
+      ]);
+      setConversations(convRes.data.conversations || convRes.data || []);
+      setLikers(likerRes.data || []);
     } catch {
-      // silent fail, show empty list
+      // silent fail, show empty lists
     } finally {
       setLoading(false);
     }
@@ -100,6 +106,52 @@ export default function ChatListScreen({ navigation }) {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <Text style={styles.header}>Messages</Text>
+
+      {!loading && likers.length > 0 && (
+        <View style={styles.likersSection}>
+          <Text style={styles.sectionTitle}>LIKES YOU ({likers.length})</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.likersScroll}
+          >
+            {likers.map((liker) => {
+              const likerPhoto = resolvePhotoUrl(liker.photos?.[0]);
+              return (
+                <TouchableOpacity
+                  key={liker._id}
+                  style={styles.likerItem}
+                  activeOpacity={0.8}
+                  onPress={() =>
+                    navigation.navigate('MatchFound', {
+                      profile: liker,
+                      fromLikesYou: true,
+                    })
+                  }
+                >
+                  <View style={styles.likerAvatarWrap}>
+                    {likerPhoto ? (
+                      <Image source={{ uri: likerPhoto }} style={styles.likerAvatar} />
+                    ) : (
+                      <LinearGradient
+                        colors={['#2A2A2A', '#1A1A1A']}
+                        style={[styles.likerAvatar, styles.likerAvatarFallback]}
+                      >
+                        <Text style={styles.likerInitial}>
+                          {(liker.name || '?').charAt(0).toUpperCase()}
+                        </Text>
+                      </LinearGradient>
+                    )}
+                  </View>
+                  <Text style={styles.likerName} numberOfLines={1}>
+                    {liker.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
 
       {loading ? (
         <View style={styles.loadingWrap}>
@@ -194,6 +246,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: theme.spacing.xl,
+    marginTop: 40,
   },
   emptyEmoji: {
     fontSize: 48,
@@ -209,5 +262,57 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: theme.colors.textMuted,
     marginTop: theme.spacing.sm,
+  },
+  likersSection: {
+    paddingVertical: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  sectionTitle: {
+    fontFamily: theme.fonts.bodySemiBold,
+    fontSize: 11,
+    color: theme.colors.accent,
+    letterSpacing: 1.5,
+    paddingHorizontal: theme.spacing.lg,
+    marginBottom: theme.spacing.sm,
+  },
+  likersScroll: {
+    paddingHorizontal: theme.spacing.lg,
+    gap: 16,
+  },
+  likerItem: {
+    alignItems: 'center',
+    width: 65,
+  },
+  likerAvatarWrap: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    borderWidth: 1.5,
+    borderColor: theme.colors.accent,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  likerAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
+  likerAvatarFallback: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  likerInitial: {
+    fontFamily: theme.fonts.heading,
+    fontSize: 20,
+    color: theme.colors.textMuted,
+  },
+  likerName: {
+    fontFamily: theme.fonts.body,
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    marginTop: 6,
+    textAlign: 'center',
   },
 });

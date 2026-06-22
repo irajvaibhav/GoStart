@@ -2,25 +2,46 @@
 // golden sparkle header, big photo, profile details, interest chips
 // receives profile via route params from FindMatchScreen
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Dimensions, Image,
+  StyleSheet, Dimensions, Image, Alert, ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import theme from '../../theme';
-import { resolvePhotoUrl } from '../../api';
+import { resolvePhotoUrl, likeUser } from '../../api';
 
 const { width } = Dimensions.get('window');
 
 export default function MatchFoundScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
   const profile = route.params?.profile || {};
-  // match only exists when FindMatchScreen's like() call came back mutual -
-  // a one-sided like has no Match document, so there's no chat to start yet
   const match = route.params?.match || null;
+  const fromLikesYou = route.params?.fromLikesYou || false;
+
+  const [isMatched, setIsMatched] = useState(!!match);
+  const [currentMatch, setCurrentMatch] = useState(match);
+  const [loadingLike, setLoadingLike] = useState(false);
+
+  const handleLikeBack = async () => {
+    setLoadingLike(true);
+    try {
+      const res = await likeUser(profile._id);
+      if (res.data.matched) {
+        setIsMatched(true);
+        setCurrentMatch(res.data.match);
+      } else {
+        Alert.alert('Liked!', `You liked ${name || 'them'}.`);
+        navigation.goBack();
+      }
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.error || 'Something went wrong');
+    } finally {
+      setLoadingLike(false);
+    }
+  };
 
   // fallback values so screen doesn't crash if backend sends partial data
   const {
@@ -74,7 +95,7 @@ export default function MatchFoundScreen({ route, navigation }) {
           </LinearGradient>
           {/* only a real mutual match unlocks chat - a one-sided like just
               gets a friendlier heads-up that we'll let them know if it becomes one */}
-          <Text style={styles.matchLabel}>{match ? "It's a Match!" : 'Liked!'}</Text>
+          <Text style={styles.matchLabel}>{isMatched ? "It's a Match!" : (fromLikesYou ? 'Likes You!' : 'Liked!')}</Text>
         </Animated.View>
 
         {/* profile card */}
@@ -164,16 +185,29 @@ export default function MatchFoundScreen({ route, navigation }) {
         </Animated.View>
 
         {/* start conversation button - only shown when there's an actual
-            Match doc to chat against. without `match`, chat.js has nothing
+            Match doc to chat against. without `currentMatch`, chat.js has nothing
             to look up and would just 404. */}
         <Animated.View entering={FadeInDown.delay(400)}>
-          {match ? (
+          {isMatched ? (
             <TouchableOpacity
               style={styles.startBtn}
               activeOpacity={0.8}
-              onPress={() => navigation.navigate('StartConversation', { profile, match })}
+              onPress={() => navigation.navigate('StartConversation', { profile, match: currentMatch })}
             >
               <Text style={styles.startBtnText}>Start Conversation</Text>
+            </TouchableOpacity>
+          ) : fromLikesYou ? (
+            <TouchableOpacity
+              style={[styles.startBtn, loadingLike && { opacity: 0.6 }]}
+              activeOpacity={0.8}
+              onPress={handleLikeBack}
+              disabled={loadingLike}
+            >
+              {loadingLike ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.startBtnText}>Like Back & Chat</Text>
+              )}
             </TouchableOpacity>
           ) : (
             <TouchableOpacity

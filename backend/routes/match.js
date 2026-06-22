@@ -10,6 +10,9 @@ const matchController = require('../controllers/matchController');
 // GET /api/match/discover - get profiles to swipe on
 router.get('/discover', auth, matchController.discover);
 
+// GET /api/match/likers - get profiles of users who liked current user
+router.get('/likers', auth, matchController.getLikers);
+
 // POST /api/match/like - like a user (costs 1 credit)
 router.post('/like', auth, matchController.like);
 

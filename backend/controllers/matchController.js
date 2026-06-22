@@ -184,3 +184,35 @@ exports.getMatches = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+
+// Get all users who liked the logged-in user, but whom the logged-in user hasn't swiped on yet
+exports.getLikers = async (req, res) => {
+  try {
+    // 1. Find all Likes where toUser is current user and action is 'like'
+    const likesReceived = await Like.find({ toUser: req.user, action: 'like' }).select('fromUser');
+    const likerIds = likesReceived.map(l => l.fromUser);
+
+    if (likerIds.length === 0) {
+      return res.json([]);
+    }
+
+    // 2. Find all Likes where fromUser is current user (swipes already made by current user)
+    const swipesMade = await Like.find({ fromUser: req.user }).select('toUser');
+    const swipedIds = swipesMade.map(l => l.toUser.toString());
+
+    // 3. Filter out users who have already been liked/passed by current user
+    const pendingLikerIds = likerIds.filter(id => !swipedIds.includes(id.toString()));
+
+    if (pendingLikerIds.length === 0) {
+      return res.json([]);
+    }
+
+    // 4. Fetch the user details of these pending likers
+    const users = await User.find({ _id: { $in: pendingLikerIds } }).select('name photos city bio age gender height religion college profession interests weekendVibe firstDateIdea loveLanguage isVerified');
+
+    res.json(users);
+  } catch (err) {
+    console.error('Get likers error:', err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
